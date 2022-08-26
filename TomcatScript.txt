@@ -1,0 +1,21 @@
+
+##change directory to root 
+cd ~
+##install docker 
+sudo yum install docker -y
+##start docker 
+service docker start
+##pull tomcat from dockerfile
+nano dockerfile
+FROM tomcat:latest
+RUN cp -R /usr/local/tomcat/webapps.dist/* /usr/local/tomcat/webapps
+COPY tomcat-users.xml /usr/local/tomcat/conf/
+COPY context.xml /usr/local/tomcat/webapps/manager/META-INF/
+##create image
+docker build -t my-tomcat-image . 
+##create container 
+docker run -d --name tomcat-container -p 8080:8080 my-tomcat-image
+## get docker status
+service docker status
+## container status 
+docker ps -a
