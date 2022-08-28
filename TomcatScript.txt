@@ -1,19 +1,37 @@
-
 ##change directory to root 
 cd ~
 ##install docker 
 sudo yum install docker -y
 ##start docker 
 service docker start
-##pull tomcat from dockerfile
-nano dockerfile
-FROM tomcat:latest
+##create new dockerfile
+echo 'FROM tomcat:latest
 RUN cp -R /usr/local/tomcat/webapps.dist/* /usr/local/tomcat/webapps
 COPY tomcat-users.xml /usr/local/tomcat/conf/
-COPY context.xml /usr/local/tomcat/webapps/manager/META-INF/
-##create image
+COPY context.xml /usr/local/tomcat/webapps/manager/META-INF/' >> dockerfile
+##create tomcat-users.xml
+echo '<tomcat-users xmlns="http://tomcat.apache.org/xml"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd"
+              version="1.0">
+<role rolename="admin-gui"/>
+<role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="manager-jmx"/>
+<role rolename="manager-status"/>
+<user username="admin1" password="P@ssw0rd123!" roles="admin-gui,manager-gui, manager-script,manager-jmx, manager-status"/>
+</tomcat-users>' >> tomcat-users.xml
+##create new xml file to allow access from anywhere besides localhost
+echo '<Context antiResourceLocking="false" privileged="true" >
+  <CookieProcessor className="org.apache.tomcat.util.http.Rfc6265CookieProcessor"
+                   sameSiteCookies="strict" />
+<!-- <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" /> -->
+  <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Li$"/>
+  </Context>' >> context.xml
+##create tomcat image
 docker build -t my-tomcat-image . 
-##create container 
+##create tomcat container 
 docker run -d --name tomcat-container -p 8080:8080 my-tomcat-image
 ## get docker status
 service docker status
